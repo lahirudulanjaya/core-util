@@ -98,7 +98,6 @@ public class DbUtils {
     	if(instance ==null) {
     		instance = new DbUtils();
     	}
-    	
     	return instance;
     }
 
@@ -118,10 +117,10 @@ public class DbUtils {
             Context ctx = new InitialContext();
             DEP_DATA_SOURCE = (DataSourceNames.WSO2TELCO_DEP_DB.jndiName());
             Datasource = (DataSource) ctx.lookup(DEP_DATA_SOURCE);
-
         } catch (NamingException e) {
             handleException("Error while looking up the data source: " + DEP_DATA_SOURCE, e);
         }
+
     }
 
     /**
@@ -167,6 +166,7 @@ public class DbUtils {
         initializeConnectDatasource();
 
         if (connectDatasource != null) {
+           // System.out.print(connectDatasource.getConnection());
             return connectDatasource.getConnection();
         } else {
             throw new SQLException("Datasource not initialized properly");

@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
-public class PropertyFileReader {
+public class PropertyFileReader{
 
     private static Log log = LogFactory.getLog(PropertyFileReader.class);
     private static PropertyFileReader propertyFileReader = null;
@@ -23,11 +23,13 @@ public class PropertyFileReader {
         if (propertyFileReader == null) {
             propertyFileReader = new PropertyFileReader();
         }
+        System.out.print(propertyFileReader);
         return propertyFileReader;
     }
 
     public Properties getProperties(String fileName) {
         String configPath = CarbonUtils.getCarbonConfigDirPath() + File.separator + fileName;
+        System.out.print(configPath);
         Properties props = new Properties();
         try {
             props.load(new FileInputStream(configPath));
