@@ -42,7 +42,7 @@ public class UserManageHealper {
 		/**
 		 * validate auth Header string this need to formated as Basic encodeBase64(userName:password)
 		 */
-		if(!(authHeader.contains("Basic")||authHeader.contains("basic"))) { //if Basic missing in the string
+		if(!(authHeader.contains("Basic")||authHeader.contains("basic"))){ //if Basic missing in the string
 			log.debug("keyword Basic is missing in the string : "+authHeader);
 			throw new BusinessException(GenaralError.INVALID_AUTH_HEADER);
 		}
@@ -52,7 +52,7 @@ public class UserManageHealper {
 		}
 		
 		final String  credential= authHeader.substring(5,authHeader.length()-1).trim();
-			
+
 		try {
 			/**
 			 * decode the credential and convert into string

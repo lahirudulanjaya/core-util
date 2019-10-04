@@ -23,13 +23,12 @@ public class PropertyFileReader{
         if (propertyFileReader == null) {
             propertyFileReader = new PropertyFileReader();
         }
-        System.out.print(propertyFileReader);
         return propertyFileReader;
     }
 
     public Properties getProperties(String fileName) {
-        String configPath = CarbonUtils.getCarbonConfigDirPath() + File.separator + fileName;
-        System.out.print(configPath);
+        String configPath = CarbonUtils.getCarbonConfigDirPath() + File.separator+ fileName;
+
         Properties props = new Properties();
         try {
             props.load(new FileInputStream(configPath));

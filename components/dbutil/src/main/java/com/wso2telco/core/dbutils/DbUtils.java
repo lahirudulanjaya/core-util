@@ -86,19 +86,21 @@ public class DbUtils {
 
     private static Map<DataSourceNames, DataSource> dbDataSourceMap;
 
-    private static HashMap<DataSourceNames,String> dbNames = null;
+    private static HashMap<DataSourceNames, String> dbNames = null;
 
     static {
         dbDataSourceMap = new HashMap<DataSourceNames, DataSource>();
     }
-    private DbUtils() {}
+
+    private DbUtils() { }
+
     private static DbUtils instance;
-    
+
     public static DbUtils getInstance() {
-    	if(instance ==null) {
-    		instance = new DbUtils();
-    	}
-    	return instance;
+        if (instance == null) {
+            instance = new DbUtils();
+        }
+        return instance;
     }
 
     /**
@@ -117,10 +119,23 @@ public class DbUtils {
             Context ctx = new InitialContext();
             DEP_DATA_SOURCE = (DataSourceNames.WSO2TELCO_DEP_DB.jndiName());
             Datasource = (DataSource) ctx.lookup(DEP_DATA_SOURCE);
+
         } catch (NamingException e) {
             handleException("Error while looking up the data source: " + DEP_DATA_SOURCE, e);
         }
 
+    }
+
+    /**
+     * @deprecated use {@link #initializeConnectDatasource(Context ctx)} instead
+     */
+    @Deprecated
+    public static void initializeConnectDatasource() throws SQLException, DBUtilException {
+        try {
+            initializeConnectDatasource(new InitialContext());
+        } catch (NamingException e) {
+            handleException("Error while looking up the data source: " + CONNECT_DB, e);
+        }
     }
 
     /**
@@ -129,13 +144,12 @@ public class DbUtils {
      * @throws SQLException the SQL exception
      *                      the db util exception
      */
-    public static void initializeConnectDatasource() throws SQLException, DBUtilException {
+    public static void initializeConnectDatasource(Context ctx) throws SQLException, DBUtilException {
         if (connectDatasource != null) {
             return;
         }
 
         try {
-            Context ctx = new InitialContext();
             connectDatasource = (DataSource) ctx.lookup(CONNECT_DB);
 
         } catch (NamingException e) {
@@ -150,9 +164,9 @@ public class DbUtils {
      * @return the db connection
      * @throws SQLException    the SQL exception
      * @throws DBUtilException the dbutilException exception
-     * use instance getConnection
+     *                         use instance getConnection
      */
-    @Deprecated 
+    @Deprecated
     public static Connection getDBConnection() throws SQLException, DBUtilException {
         initializeDatasources();
 
@@ -162,11 +176,11 @@ public class DbUtils {
         throw new SQLException("Datasource not initialized properly");
     }
 
-    public static Connection getConnectDbConnection() throws SQLException, DBUtilException {
+    public static Connection getConnectDbConnection() throws SQLException, DBUtilException
+    {
         initializeConnectDatasource();
-
         if (connectDatasource != null) {
-           // System.out.print(connectDatasource.getConnection());
+            // System.out.print(connectDatasource.getConnection());
             return connectDatasource.getConnection();
         } else {
             throw new SQLException("Datasource not initialized properly");
@@ -179,7 +193,52 @@ public class DbUtils {
      * @return the db connection
      * @throws SQLException the SQL exception
      */
+
+
+
+    /**
+     * @deprecated use {@link #getDbConnection(DataSourceNames dataSourceName,Context ctx) instead
+     */
     public static synchronized Connection getDbConnection(DataSourceNames dataSourceName) throws Exception {
+
+       return getDbConnection(dataSourceName,new InitialContext());
+    }
+
+
+    public static synchronized Connection getDbConnection(DataSourceNames dataSourceName,Context ctx) throws Exception {
+
+        try {
+            if (!dbDataSourceMap.containsKey(dataSourceName)) {
+
+                dbDataSourceMap.put(dataSourceName, (DataSource) ctx.lookup(dataSourceName.jndiName()));
+            }
+
+            DataSource dbDatasource = dbDataSourceMap.get(dataSourceName);
+
+
+            if (dbDatasource != null) {
+                log.info(dataSourceName.toString() + " DB Initialize successfully.");
+                return dbDatasource.getConnection();
+            } else {
+
+                log.info(dataSourceName.toString() + " DB NOT Initialize successfully.");
+                return null;
+            }
+        } catch (Exception e) {
+
+            log.info("Error while looking up the data source: " + dataSourceName.toString(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Gets the db connection.
+     *
+     * @return the db connection
+     * @throws SQLException the SQL exception
+     */
+    public Connection getConnection(DataSourceNames dataSourceName) throws BusinessException {
+
 
         try {
             if (!dbDataSourceMap.containsKey(dataSourceName)) {
@@ -199,44 +258,10 @@ public class DbUtils {
                 log.info(dataSourceName.toString() + " DB NOT Initialize successfully.");
                 return null;
             }
-        } catch (Exception e) {
-
-            log.info("Error while looking up the data source: " + dataSourceName.toString(), e);
-            throw e;
+        } catch (NamingException | SQLException e) {
+            log.error("", e);
+            throw new BusinessException(GenaralError.INTERNAL_SERVER_ERROR);
         }
-    }
-    
-    /**
-     * Gets the db connection.
-     *
-     * @return the db connection
-     * @throws SQLException the SQL exception
-     */
-    public   Connection getConnection(DataSourceNames dataSourceName) throws BusinessException {
-    	
-
-        try {
-			if (!dbDataSourceMap.containsKey(dataSourceName)) {
-
-			    Context ctx = new InitialContext();
-			    dbDataSourceMap.put(dataSourceName, (DataSource) ctx.lookup(dataSourceName.jndiName()));
-			}
-
-			DataSource dbDatasource = dbDataSourceMap.get(dataSourceName);
-
-			if (dbDatasource != null) {
-
-			    log.info(dataSourceName.toString() + " DB Initialize successfully.");
-			    return dbDatasource.getConnection();
-			} else {
-
-			    log.info(dataSourceName.toString() + " DB NOT Initialize successfully.");
-			    return null;
-			}
-		} catch (NamingException | SQLException e) {
-			log.error("",e);
-			throw new BusinessException(GenaralError.INTERNAL_SERVER_ERROR);
-		}
     
 /*
  * 
@@ -276,6 +301,7 @@ public class DbUtils {
      * @return the string
      * @throws Exception the exception
      */
+
     public static String format(int intData, int finalLen) throws Exception {
         String strData = String.valueOf(intData);
         String finalStr;
@@ -342,9 +368,6 @@ public class DbUtils {
     /**
      * Format.
      *
-     * @param decData   the dec data
-     * @param precision the precision
-     * @param scale     the scale
      * @return the string
      * @throws Exception the exception
      */
@@ -398,19 +421,17 @@ public class DbUtils {
             Class.forName(driverClass);
             connection = DriverManager.getConnection(connectionUrl, connectionUsername, connectionPassword);
 
-        } catch (ClassNotFoundException e) {
-            System.out.println("JDBC Driver Error");
-            e.printStackTrace();
-            return null;
         } catch (SQLException e) {
             System.out.println("Connection Failed! Check output console");
             e.printStackTrace();
             return null;
         }
         connection.setAutoCommit(false);
-
         return connection;
+
     }
+
+
 
     /**
      * Disconnect.
@@ -548,22 +569,34 @@ public class DbUtils {
         }
     }
 
-    public static Map<DataSourceNames, String> getDbNames() {
+    /**
+     * @deprecated use {@link #getDbNames(Context ctx)} instead
+     */
+    public static Map<DataSourceNames, String> getDbNames() throws NamingException {
+
+    return getDbNames(new InitialContext());
+
+    }
+
+
+
+    public static Map<DataSourceNames, String> getDbNames(Context ctx) {
 
         if (dbNames == null) {
             dbNames = new HashMap<>();
             Connection con = null;
-
             for (DataSourceNames name : DataSourceNames.values()) {
                 try {
-                    con = DbUtils.getDbConnection(name);
+                    con = DbUtils.getDbConnection(name,ctx);
                     if (con != null) {
                         dbNames.put(name, con.getCatalog());
                         con.close();
                     }
                 } catch (NameNotFoundException e) {
+                    System.out.println("NameNotFoundException");
                     log.error("Failed to get database name for " + name);
                 } catch (Exception e) {
+                    System.out.println("Exception");
                     log.error("Error while getting database names", e);
                 }
             }
